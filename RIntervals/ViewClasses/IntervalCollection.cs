@@ -82,6 +82,123 @@ namespace RIntervals.ViewClasses
         #region Операции над интервалами коллекции
 
         /// <summary>
+        /// Find intervals with unique values in sequences starting from the first value in the collection.
+        /// Only the first interval in each sequence of consecutive intervals with the same value is included.
+        /// </summary>
+        /// <returns>A list of intervals containing the first interval of each unique sequence of values.</returns>
+        public List<Interval<T>> FindUniqueIntervalsByFirstValueSequence()
+        {
+#if NET5_0_OR_GREATER
+            // Ensure T is assignable to DoubleIntervalSource
+            if (!typeof(T).IsAssignableTo(typeof(DoubleIntervalSource)))
+#else
+    if (!typeof(DoubleIntervalSource).IsAssignableFrom(typeof(T)))
+#endif
+            {
+                throw new InvalidOperationException("This method is only applicable to collections of DoubleIntervalSource.");
+            }
+
+            if (intervals.Count == 0)
+            {
+                return new List<Interval<T>>(); // Return an empty list if there are no intervals
+            }
+
+            var uniqueIntervals = new List<Interval<T>>();
+            Interval<T>? lastAddedInterval = null;
+            double? lastValue = null;
+
+            foreach (var interval in intervals)
+            {
+                var source = interval.Source as DoubleIntervalSource;
+
+                if (source == null)
+                {
+                    throw new InvalidOperationException("Interval does not contain a valid DoubleIntervalSource.");
+                }
+
+                if (lastValue == null || source.Value != lastValue)
+                {
+                    // Add the interval if it's the first or its value differs from the last added interval
+                    uniqueIntervals.Add(interval);
+                    lastValue = source.Value;
+                    lastAddedInterval = interval;
+                }
+            }
+
+            return uniqueIntervals;
+        }
+
+
+        /// <summary>
+        /// Find intervals with unique values in sequences of intervals sharing the same value.
+        /// For a given value, only the first interval in the sequence of consecutive intervals is included.
+        /// </summary>
+        /// <param name="targetValue">The target value to filter the sequences.</param>
+        /// <returns>A list of intervals containing the first interval of each sequence with the specified value.</returns>
+        public List<Interval<T>> FindUniqueIntervalsByValueSequence(double targetValue)
+        {
+#if NET5_0_OR_GREATER
+            // Ensure T is assignable to DoubleIntervalSource
+            if (!typeof(T).IsAssignableTo(typeof(DoubleIntervalSource)))
+#else
+    if (!typeof(DoubleIntervalSource).IsAssignableFrom(typeof(T)))
+#endif
+            {
+                throw new InvalidOperationException("This method is only applicable to collections of DoubleIntervalSource.");
+            }
+
+            var uniqueIntervals = new List<Interval<T>>();
+
+            Interval<T>? lastAddedInterval = null;
+
+            foreach (var interval in intervals)
+            {
+                var source = interval.Source as DoubleIntervalSource;
+
+                if (source != null && source.Value == targetValue)
+                {
+                    // Add the first interval in a new sequence of matching intervals
+                    if (lastAddedInterval == null || !ReferenceEquals(lastAddedInterval, interval))
+                    {
+                        uniqueIntervals.Add(interval);
+                        lastAddedInterval = interval;
+                    }
+                }
+                else
+                {
+                    // Reset last added interval when the value changes
+                    lastAddedInterval = null;
+                }
+            }
+
+            return uniqueIntervals;
+        }
+
+
+        /// <summary>
+        /// Find all intervals where the Value property of DoubleIntervalSource matches the specified value.
+        /// </summary>
+        /// <param name="targetValue">The value to search for.</param>
+        /// <returns>List of intervals where Value matches the target value.</returns>
+        public List<Interval<T>> FindIntervalsByValue(double targetValue)
+        {
+#if NET5_0_OR_GREATER
+            // Use IsAssignableTo in .NET 5 or later
+            if (!typeof(T).IsAssignableTo(typeof(DoubleIntervalSource)))
+#else
+    // Use IsAssignableFrom for earlier versions
+    if (!typeof(DoubleIntervalSource).IsAssignableFrom(typeof(T)))
+#endif
+            {
+                throw new InvalidOperationException("This method is only applicable to collections of DoubleIntervalSource.");
+            }
+
+            return intervals
+                .Where(interval => (interval.Source as DoubleIntervalSource)?.Value == targetValue)
+                .ToList();
+        }
+
+        /// <summary>
         /// Найти все интервалы, пересекающиеся с заданным
         /// </summary>
         /// <param name="target"></param>

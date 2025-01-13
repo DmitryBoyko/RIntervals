@@ -7,7 +7,7 @@ namespace RIntervals.Converters
     public static class PointToIntervalConverter
     {
         public static IntervalCollection<DoubleIntervalSource>
-            ConvertToIntervalCollection(List<Point> points, bool sortPoints = true, , bool includeFinalInterval = false)
+            ConvertToIntervalCollection(List<Point> points, bool sortPoints = true,  bool includeFinalInterval = false)
         {
             var intervals = new IntervalCollection<DoubleIntervalSource>();
 
